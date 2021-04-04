@@ -31,7 +31,7 @@ def read_from_csv_num(path):
 
 def read_from_csv_mixed(path):
     """For the datasets with both continuous and categorical values, the position of the numerical ones must be known.
-    In the case of heart_disease_cleveland the numerical position to be transformed in float are 0,3,4,7,9"""
+    In the case of heart_disease_cleveland the positions of the attributes to be transformed in float are 0,3,4,7,9"""
     with open(path, mode='r') as csv_file:
         csv_reader = csv.reader(csv_file)
         dataset = []
