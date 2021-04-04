@@ -72,6 +72,6 @@ if __name__ == '__main__':
     #titles, examples = Helpers.read_from_csv_mixed("heart_disease_cleveland.csv")
 
     start_time = time.time()
-    testing(examples, titles, n_splits=2)
+    testing(examples, titles, n_splits=10)
     end_time = time.time()
     print(f'TIME: {end_time - start_time}')
