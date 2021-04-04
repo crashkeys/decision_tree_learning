@@ -23,7 +23,7 @@ FONTI ESTERNE
 
 
 #############################################################
-Datasets infos from the originals datasets description on UCI
+Datasets info from the originals datasets description on UCI
 #############################################################
 
 Se necessario, i dataset sono stati modificati in modo da avere "Goal" sull'ultima colonna. Tutti i dataset considerati hanno output binario e non presentano dati mancanti.
