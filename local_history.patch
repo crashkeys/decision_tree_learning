@@ -1,0 +1,195 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main.py	(date 1611576481257)
++++ main.py	(date 1611576481257)
+@@ -80,6 +80,23 @@
+     return remainder
+ 
+ 
++def split_information(examples_list, attribute):
++    intr_val = 0  #intrinsic_value
++    different_values = get_all_different_values(examples_list, attribute)
++    for value in different_values:
++        p = 0
++        n = 0
++        outcomes = outcomes_per_value(examples_list, attribute, value)
++        for o in outcomes:
++            if o == "Outcome_Yes":
++                p += 1
++            else:
++                n += 1
++        prob = (p + n) / len(examples_list)
++        intr_val -= prob * (math.log2(prob))
++    return intr_val
++
++
+ def information_gain(examples_list, attribute):
+     outcomes = get_outcome_list(examples_list)
+     l = len(examples_list)
+@@ -93,51 +110,59 @@
+ 
+ ####### FOR CONTINUOUS VALUES ######
+ 
+-def is_numeric(examples_list, attribute):
+-    return isinstance(examples_list[0][attribute], int) or isinstance(examples_list[0][attribute], float)
+-
++def is_numeric(titles, attribute):
++    #return isinstance(examples_list[0][attribute], int) or isinstance(examples_list[0][attribute], float)
++    if titles[attribute] == "Weather" or titles[attribute] == "WaitingTime":
++        return True
++    return False
+ 
+-def split_example(examples_list, attribute):
+-    #find threshold and indices
+-    vals = get_all_values(examples_list, attribute)
++#def split_example(examples_list, attribute):
++#     #find threshold and indices
++#     vals = get_all_values(examples_list, attribute)
++#
++#     #change to float
++#     for i in range(len(vals)):
++#         vals[i] = float(vals[i])
++#
++#     index_array = numpy.argsort(vals)
++#     vals.sort()
++#     thresholds = []
++#     index_to_split = []
++#     for i in range(len(vals)-1):
++#         if examples_list[index_array[i]][get_outcome_pos(examples_list)] != examples_list[index_array[i+1]][get_outcome_pos(examples_list)]:
++#             #print(f'Found a threshold between {vals[i]} and {vals[i+1]}')
++#             tr = (vals[i] + vals[i+1]) / 2
++#             thresholds.append(tr)
++#             index_to_split.append(i)
++#     #print(f'Thresholds for attribute {attribute} = {thresholds}')
++#
++#     #create sections
++#     start = 0
++#     sections = []
++#     for end in index_to_split:
++#         sections.append(vals[start:(end + 1)])
++#         start = end + 1
++#     sections.append(vals[start:])
++#     #print(f'Sections: {sections}')
++#     return sections
+ 
+-    #change to float
+-    for i in range(len(vals)):
+-        vals[i] = float(vals[i])
+ 
+-    index_array = numpy.argsort(vals)
+-    vals.sort()
+-    thresholds = []
+-    index_to_split = []
+-    for i in range(len(vals)-1):
+-        if examples_list[index_array[i]][get_outcome_pos(examples_list)] != examples_list[index_array[i+1]][get_outcome_pos(examples_list)]:
+-            #print(f'Found a threshold between {vals[i]} and {vals[i+1]}')
+-            tr = (vals[i] + vals[i+1]) / 2
+-            thresholds.append(tr)
+-            index_to_split.append(i)
+-    #print(f'Thresholds for attribute {attribute} = {thresholds}')
+-
+-    #create sections
+-    start = 0
+-    sections = []
+-    for end in index_to_split:
+-        sections.append(vals[start:(end + 1)])
+-        start = end + 1
+-    sections.append(vals[start:])
+-    #print(f'Sections: {sections}')
+-    return sections
++#def gain_ratio(examples_list, attribute):
++    # vals = get_all_values(examples_list, attribute)
++    # split_info = 0
++    # sections = split_example(examples_list, attribute)
++    # for part in sections:
++    #     split_info -= (len(part) / len(vals)) * math.log2(len(part) / len(vals))
++    # gain = information_gain(examples_list, attribute)
++    # gain_ratio = gain / split_info
++    # #print(f'The information gain for attribute {titles[attribute]} is {gain_ratio}')
++    # return gain_ratio
+ 
+ 
+ def gain_ratio(examples_list, attribute):
+-    vals = get_all_values(examples_list, attribute)
+-    split_info = 0
+-    sections = split_example(examples_list, attribute)
+-    for part in sections:
+-        split_info -= (len(part) / len(vals)) * math.log2(len(part) / len(vals))
+     gain = information_gain(examples_list, attribute)
+-    gain_ratio = gain / split_info
+-    #print(f'The information gain for attribute {titles[attribute]} is {gain_ratio}')
+-    return gain_ratio
++    intr_val = split_information(examples_list, attribute)
++    return gain / intr_val
+ 
+ 
+ #### CHOOSE BEST ATTRIBUTE ###
+@@ -145,10 +170,10 @@
+ def choose_best_attribute(examples_list, titles):
+     gains = []
+     for i in range(len(titles)-1):
+-        if is_numeric(examples_list, i):
+-            gain = gain_ratio(examples_list, i) #gain ratio prende la posizione dell'attributo
+-        else:
+-            gain = information_gain(examples_list, i)
++        #if is_numeric(titles, i):
++        gain = gain_ratio(examples_list, i) #gain ratio prende la posizione dell'attributo
++        #else:
++            #gain = information_gain(examples_list, i)
+         gains.append(gain)
+     best_attribute = gains.index(max(gains))
+     gains.sort()
+@@ -175,7 +200,7 @@
+ def delete_rows(titles, examples_list, attribute, v):
+     if titles[attribute] == 'Weather' or titles[attribute] == 'WaitingTime':
+         examples_list = [
+-            exs for exs in examples_list if float(exs[attribute]) in v
++            exs for exs in examples_list if float(exs[attribute]) == v
+         ]
+     else:
+         examples_list = [
+@@ -202,11 +227,11 @@
+         return 0
+     else:
+         best_attr, best_attr_name = choose_best_attribute(examples_list, titles)
+-        if best_attr_name == 'Weather' or best_attr_name == 'WaitingTime':
+-            sections = split_example(examples_list, best_attr)
+-            vals = sections
+-        else:
+-            vals = get_all_different_values(examples_list, best_attr)
++        # if best_attr_name == 'Weather' or best_attr_name == 'WaitingTime':
++        #     sections = split_example(examples_list, best_attr)
++        #     vals = sections
++        # else:
++        vals = get_all_different_values(examples_list, best_attr)
+         #tree = DecisionTree.DecisionTree(best_attribute)
+         for v in vals:
+             new_examples_list = delete_rows(titles, examples_list, best_attr, v)
+@@ -224,19 +249,19 @@
+ 
+ if __name__ == '__main__':
+ 
+-    titles, examples = Helpers.read_from_csv("databaseCAT.csv")
++    names, examples = Helpers.read_from_csv("databaseNUM.csv")
+ 
+     #titles, examples = Helpers.read_from_csv("tennis.csv")
+ 
+     #titles, examples = Helpers.read_from_csv("sonar_db.csv")
+ 
+     #So che nel mio dataset l'attributo da trasformare in float è il decimo
+-    for example in examples:
+-        example[9] = float(example[9]) #waitingTime
+-        example[10] = float(example[10]) #weather
++    # for example in examples:
++    #     example[9] = float(example[9]) #waitingTime
++    #     example[10] = float(example[10]) #weather
+ 
+ 
+-    decision_tree_learning(examples, titles)
++    decision_tree_learning(examples, names)
+ 
+ 
+ 
